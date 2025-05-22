@@ -5,15 +5,21 @@ import { GridFSBucket } from 'mongodb';
 // Função para criar livro com upload de capa e PDF
 export const criarLivro = async (req, res) => {
   try {
+    // Pegando os arquivos de capa e pdf como buffers
+    const capaBuffer = req.files['capa'][0].buffer;
+    const pdfBuffer = req.files['pdf'][0].buffer;
+
+    // Cria o livro com os buffers dos arquivos
     const livro = new Livro({
       titulo: req.body.titulo,
       autor: req.body.autor,
       ano: req.body.ano,
       genero: req.body.genero,
-      capaUrl: req.files['capa'][0]._id,  // Armazena o _id da capa no GridFS
-      pdfUrl: req.files['pdf'][0]._id    // Armazena o _id do PDF no GridFS
+      capa: capaBuffer,  // Salva o Buffer da capa
+      pdf: pdfBuffer,    // Salva o Buffer do PDF
     });
 
+    // Salva o livro no banco de dados
     await livro.save();
     res.status(201).json(livro);
   } catch (err) {
@@ -21,80 +27,78 @@ export const criarLivro = async (req, res) => {
   }
 };
 
-
-// Função para listar todos os livros
-export const listarLivros = async (req, res) => {
-  try {
-    const livros = await Livro.find().populate('genero');
-    res.json(livros);
-  } catch (err) {
-    res.status(500).json({ erro: err.message });
-  }
-};
-
 // Função para baixar o arquivo PDF de um livro
 export const baixarPdf = async (req, res) => {
   const livroId = req.params.id;
+
   try {
     const livro = await Livro.findById(livroId);
     if (!livro) {
       return res.status(404).json({ erro: 'Livro não encontrado' });
     }
 
-    // Verifica se o pdfId é válido
-    const pdfId = livro.pdfUrl; // O _id do PDF
-    if (!mongoose.Types.ObjectId.isValid(pdfId)) {
+    const pdfBuffer = livro.pdf; // Recupera o Buffer do PDF
+
+    if (!pdfBuffer) {
       return res.status(404).json({ erro: 'Arquivo PDF não encontrado' });
     }
 
-    const db = mongoose.connection.db;
-    const bucket = new GridFSBucket(db, { bucketName: 'pdfs' });
-
-    // Abre o stream para o arquivo PDF
-    const stream = bucket.openDownloadStream(pdfId);
-
-    stream.on('error', (err) => {
-      console.error('Erro ao abrir stream do PDF:', err); // Para depuração
-      res.status(404).send('Arquivo PDF não encontrado');
-    });
-
-    // Pipe o conteúdo do PDF para a resposta
-    stream.pipe(res);
+    // Define o tipo MIME como 'application/pdf'
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(pdfBuffer); // Envia o buffer como resposta
   } catch (err) {
-    console.error('Erro ao baixar PDF:', err); // Para depuração
+    console.error('Erro ao baixar PDF:', err);
     res.status(500).json({ erro: err.message });
   }
 };
 
+// Função para exibir a capa do livro
 export const exibirCapa = async (req, res) => {
   const livroId = req.params.id; // Recebe o ID do livro
+
   try {
     const livro = await Livro.findById(livroId); // Encontra o livro no banco
     if (!livro) {
       return res.status(404).json({ erro: 'Livro não encontrado' });
     }
 
-    // O campo capaUrl armazena o _id do arquivo no GridFS
-    const capaId = livro.capaUrl; // Aqui você já tem o _id do arquivo no GridFS
-    if (!capaId) {
+    const capaBuffer = livro.capa; // Recupera o Buffer da capa
+
+    if (!capaBuffer) {
       return res.status(404).json({ erro: 'Capa não encontrada' });
     }
 
-    console.log('ID do arquivo da capa:', capaId); // Para depuração
+    // Define o tipo MIME como 'image/jpeg' (ou outro tipo de imagem conforme necessário)
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.send(capaBuffer); // Envia a imagem diretamente como resposta
+  } catch (err) {
+    console.error('Erro ao exibir a capa:', err);
+    res.status(500).json({ erro: err.message });
+  }
+};
 
-    const db = mongoose.connection.db; // Conexão com o banco de dados
-    const bucket = new GridFSBucket(db, { bucketName: 'capas' }); // Cria o bucket para a coleção de capas
+export const listarLivros = async (req, res) => {
+  try {
+    // Buscar todos os livros com título, id e capa
+    const livros = await Livro.find({}, 'titulo _id capa'); // Busca apenas título, ID e capa
 
-    const stream = bucket.openDownloadStream(capaId); // Usando o _id do GridFS para acessar o arquivo
+    if (!livros || livros.length === 0) {
+      return res.status(404).json({ erro: 'Nenhum livro encontrado' });
+    }
 
-    stream.on('error', (err) => {
-      console.error('Erro ao abrir stream:', err); // Para depuração
-      res.status(404).send('Arquivo da capa não encontrado');
+    // Mapear os livros e retornar a capa como buffer
+    const livrosComCapas = livros.map((livro) => {
+      return {
+        _id: livro._id,
+        titulo: livro.titulo,
+        capa: livro.capa ? livro.capa.toString('base64') : null, // Convertendo o buffer da capa para base64
+      };
     });
 
-    stream.pipe(res); // Envia a imagem diretamente para a resposta HTTP
+    // Retornar os livros com as informações necessárias (incluindo o buffer da capa)
+    res.status(200).json(livrosComCapas);
   } catch (err) {
-    console.error('Erro ao baixar a capa:', err); // Para depuração
+    console.error('Erro ao listar livros:', err);
     res.status(500).json({ erro: err.message });
   }
 };
