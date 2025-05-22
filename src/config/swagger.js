@@ -1,5 +1,11 @@
 import swaggerJSDoc from 'swagger-jsdoc'
 
+const isCodespaces = !!process.env.CODESPACE_NAME
+
+const serverUrl = isCodespaces
+  ? `https://${process.env.CODESPACE_NAME}-3000.app.github.dev`
+  : 'http://localhost:3000'
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -10,12 +16,12 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
-        description: 'Servidor local'
+        url: serverUrl,
+        description: isCodespaces ? 'GitHub Codespaces' : 'Servidor local',
       }
     ]
   },
-  apis: ['./src/routes/*.js'], // Arquivos onde estão os comentários Swagger
+  apis: ['./src/routes/*.js'], // Comentários Swagger nas rotas
 }
 
 const swaggerSpec = swaggerJSDoc(options)

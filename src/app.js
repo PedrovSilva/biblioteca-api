@@ -13,9 +13,13 @@ dotenv.config()
 const app = express()
 connectDB()
 
-app.use(cors())
+app.use(cors({
+  origin: '*', // ou ['http://localhost:3000', 'http://localhost:3001'] para múltiplas
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}))
 app.use(express.json())
-
+app.use(express.urlencoded({ extended: true })) 
 // Swagger docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
