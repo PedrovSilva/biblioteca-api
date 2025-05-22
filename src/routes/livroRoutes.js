@@ -1,6 +1,6 @@
 import express from 'express'
 import upload from '../config/multerConfig.js'
-import { criarLivro, listarLivros, baixarPdf } from '../controllers/livroController.js'
+import { criarLivro, listarLivros, baixarPdf, exibirCapa } from '../controllers/livroController.js'
 
 const router = express.Router()
 
@@ -123,6 +123,26 @@ router.get('/', listarLivros)
 // Rota para download do PDF de um livro específico
 router.get('/:id/pdf', baixarPdf)
 
+/**
+ * @swagger
+ * /livros/{id}/capa:
+ *   get:
+ *     summary: Exibe a capa do livro
+ *     tags: [Livros]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do livro
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A capa do livro
+ *       404:
+ *         description: Livro ou capa não encontrados
+ */
+router.get('/:id/capa', exibirCapa);
 
 
 export default router
