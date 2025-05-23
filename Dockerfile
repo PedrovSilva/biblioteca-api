@@ -1,20 +1,17 @@
-# Imagem base
 FROM node:20
 
-# Define o diretório de trabalho
 WORKDIR /app
 
-# Copia os arquivos de dependências
-COPY package*.json ./
 
-# Instala as dependências
+COPY package*.json ./
 RUN npm install
 
-# Copia o restante do código
+# Copia o restante do código ANTES de rodar seeds
 COPY . .
 
-# Expõe a porta da aplicação (Render usa essa porta automaticamente)
+# Executa o script após os arquivos estarem disponíveis
+RUN node seeds/generos.js
+
 EXPOSE 3000
 
-# Comando de inicialização
 CMD ["npm", "start"]
