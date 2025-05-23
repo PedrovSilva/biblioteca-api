@@ -102,3 +102,27 @@ export const listarLivros = async (req, res) => {
     res.status(500).json({ erro: err.message });
   }
 };
+
+export const obterLivro = async (req, res) => {
+  const livroId = req.params.id;
+
+  try {
+    // Busca o livro pelo ID, excluindo o campo PDF
+    const livro = await Livro.findById(livroId, { pdf: 0 });
+
+    if (!livro) {
+      return res.status(404).json({ erro: 'Livro não encontrado' });
+    }
+
+    // Converte a capa para base64, se existir
+    const livroObj = livro.toObject();
+    if (livroObj.capa) {
+      livroObj.capa = livroObj.capa.toString('base64');
+    }
+
+    res.status(200).json(livroObj);
+  } catch (err) {
+    console.error('Erro ao obter livro:', err);
+    res.status(500).json({ erro: err.message });
+  }
+};

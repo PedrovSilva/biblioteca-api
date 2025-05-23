@@ -1,6 +1,6 @@
 import express from 'express';
 import upload from '../config/multerConfig.js';
-import { criarLivro, listarLivros, baixarPdf, exibirCapa } from '../controllers/livroController.js';
+import { criarLivro, listarLivros, baixarPdf, exibirCapa, obterLivro } from '../controllers/livroController.js';
 
 const router = express.Router();
 
@@ -136,5 +136,29 @@ router.get('/:id/pdf', baixarPdf);
  *         description: Livro ou capa não encontrados
  */
 router.get('/:id/capa', exibirCapa);
+
+/**
+ * @swagger
+ * /livros/{id}:
+ *   get:
+ *     summary: Retorna os dados de um livro (exceto o PDF)
+ *     tags: [Livros]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do livro
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Dados do livro retornado com sucesso
+ *       404:
+ *         description: Livro não encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.get('/:id', obterLivro);
+
 
 export default router;
