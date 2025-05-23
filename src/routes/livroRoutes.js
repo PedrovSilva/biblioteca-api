@@ -1,8 +1,8 @@
-import express from 'express'
-import upload from '../config/multerConfig.js'
-import { criarLivro, listarLivros, baixarPdf, exibirCapa } from '../controllers/livroController.js'
+import express from 'express';
+import upload from '../config/multerConfig.js';
+import { criarLivro, listarLivros, baixarPdf, exibirCapa, obterLivro } from '../controllers/livroController.js';
 
-const router = express.Router()
+const router = express.Router();
 
 /**
  * @swagger
@@ -54,17 +54,17 @@ router.post(
     { name: 'pdf', maxCount: 1 }
   ]),
   criarLivro
-)
+);
 
 /**
  * @swagger
  * /livros:
  *   get:
- *     summary: Lista todos os livros
+ *     summary: Lista todos os livros com título, ID e capa em base64
  *     tags: [Livros]
  *     responses:
  *       200:
- *         description: Lista de livros com seus respectivos gêneros
+ *         description: Lista de livros com título, ID e capa em base64
  *         content:
  *           application/json:
  *             schema:
@@ -74,26 +74,21 @@ router.post(
  *                 properties:
  *                   _id:
  *                     type: string
+ *                     description: ID do livro
  *                   titulo:
  *                     type: string
- *                   autor:
+ *                     description: Título do livro
+ *                   capa:
  *                     type: string
- *                   ano:
- *                     type: integer
- *                   genero:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                       nome:
- *                         type: string
- *                   capaUrl:
- *                     type: string
- *                   pdfUrl:
- *                     type: string
+ *                     format: base64
+ *                     description: Capa do livro codificada em base64
+ *       404:
+ *         description: Nenhum livro encontrado
+ *       500:
+ *         description: Erro interno no servidor
  */
-router.get('/', listarLivros)
 
+router.get('/', listarLivros);
 
 /**
  * @swagger
@@ -119,9 +114,7 @@ router.get('/', listarLivros)
  *       404:
  *         description: Livro ou arquivo PDF não encontrado
  */
-
-// Rota para download do PDF de um livro específico
-router.get('/:id/pdf', baixarPdf)
+router.get('/:id/pdf', baixarPdf);
 
 /**
  * @swagger
@@ -144,5 +137,28 @@ router.get('/:id/pdf', baixarPdf)
  */
 router.get('/:id/capa', exibirCapa);
 
+/**
+ * @swagger
+ * /livros/{id}:
+ *   get:
+ *     summary: Retorna os dados de um livro (exceto o PDF)
+ *     tags: [Livros]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do livro
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Dados do livro retornado com sucesso
+ *       404:
+ *         description: Livro não encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.get('/:id', obterLivro);
 
-export default router
+
+export default router;
