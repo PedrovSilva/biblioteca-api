@@ -1,17 +1,23 @@
-import mongoose from 'mongoose'
-import dotenv from 'dotenv'
-import Genero from '../src/models/Genero.js'
+// seeds/generos.js
+import Genero from '../models/Genero.js';
 
-dotenv.config()
-mongoose.connect(process.env.MONGODB_URI)
+const generos = [
+  { nome: 'Ficção Científica' },
+  { nome: 'Fantasia' },
+  { nome: 'Romance' },
+  { nome: 'Terror' },
+  { nome: 'Biografia' }
+];
 
-async function seedGeneros() {
-  const generos = ['Romance', 'Fantasia', 'Terror', 'História']
-  for (const nome of generos) {
-    await Genero.updateOne({ nome }, { nome }, { upsert: true })
+const seedGeneros = async () => {
+  for (const genero of generos) {
+    await Genero.updateOne(
+      { nome: genero.nome },
+      { $setOnInsert: genero },
+      { upsert: true }
+    );
   }
-  console.log('Gêneros inseridos.')
-  mongoose.disconnect()
-}
+  console.log('Seed de gêneros executado');
+};
 
-seedGeneros()sssssssssssssssssssssssssssssssssssssssssssssssss
+export default seedGeneros;
