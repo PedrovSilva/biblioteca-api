@@ -1,10 +1,5 @@
+// swagger.js
 import swaggerJSDoc from 'swagger-jsdoc'
-
-const isCodespaces = !!process.env.CODESPACE_NAME
-
-const serverUrl = isCodespaces
-  ? `https://${process.env.CODESPACE_NAME}-3000.app.github.dev`
-  : 'http://localhost:3000'
 
 const options = {
   definition: {
@@ -13,15 +8,10 @@ const options = {
       title: 'Catálogo de Livros API',
       version: '1.0.0',
       description: 'API para gerenciamento de livros e gêneros',
-    },
-    servers: [
-      {
-        url: serverUrl,
-        description: isCodespaces ? 'GitHub Codespaces' : 'Servidor local',
-      }
-    ]
+    }
+    // ⛔ não inclua `servers` aqui
   },
-  apis: ['./src/routes/*.js'], // Comentários Swagger nas rotas
+  apis: ['./src/routes/*.js'],
 }
 
 const swaggerSpec = swaggerJSDoc(options)

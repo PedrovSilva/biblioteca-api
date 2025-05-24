@@ -32,7 +32,16 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true })) 
 
 // Swagger docs
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+app.use('/api-docs', swaggerUi.serve, (req, res) => {
+  const dynamicSpec = {
+    ...swaggerSpec,
+    servers: [
+      { url: `${req.protocol}://${req.get('host')}` }
+    ]
+  }
+  return swaggerUi.setup(dynamicSpec)(req, res)
+})
+
 
 // Rotas
 app.use('/generos', generoRoutes)
